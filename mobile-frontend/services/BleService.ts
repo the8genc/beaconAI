@@ -54,7 +54,12 @@ class BleServiceImpl implements BleService {
   private isTestMode: boolean = false; // Flag for using mock data instead of real BLE
 
   constructor() {
-    this.bleManager = new BleManager();
+    if (Platform.OS !== 'web') {
+      this.bleManager = new BleManager();
+    } else {
+      this.bleManager = null as any;
+      this.isTestMode = true;
+    }
   }
   
   /**
@@ -71,13 +76,20 @@ class BleServiceImpl implements BleService {
    */
   async initialize(): Promise<boolean> {
     if (this.isInitialized) return true;
-    
+
+    if (Platform.OS === 'web') {
+      console.log('BLE not available on web, running in test mode');
+      this.isTestMode = true;
+      this.isInitialized = true;
+      return true;
+    }
+
     try {
       // Subscribe to state changes
       this.bleManager.onStateChange((state) => {
         console.log('BLE state changed:', state);
       }, true);
-      
+
       this.isInitialized = true;
       return true;
     } catch (error) {
