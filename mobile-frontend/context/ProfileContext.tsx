@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { Profile } from '@/types/profile';
+import { apiService } from '@/services/ApiService';
 
 interface ProfileContextType {
   profile: Profile;
@@ -56,9 +57,14 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ...updatedProfile,
         uuid: profile.uuid || uuidv4(),
       };
-      
+
       await AsyncStorage.setItem('user_profile', JSON.stringify(profileToSave));
       setProfile(profileToSave);
+
+      // Sync to ZeroDB backend
+      apiService.saveProfile(profileToSave).catch(err => {
+        console.warn('Failed to sync profile to backend:', err);
+      });
     } catch (error) {
       console.error('Error saving profile:', error);
     }

@@ -5,6 +5,7 @@ import { useSettings } from './SettingsContext';
 import { PeerProfile } from '@/types/profile';
 import bleService from '@/services/BleService';
 import sessionService from '@/services/SessionService';
+import { apiService } from '@/services/ApiService';
 import { BleDiscoveryStatus, BlePermissionStatus, BleState } from '@/types/ble';
 import { DiscoverySession } from '@/types/session';
 
@@ -285,6 +286,10 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const logPeerInteraction = async (peerId: string, type: 'viewed' | 'saved' | 'shared') => {
     await sessionService.logConnection(peerId, type);
+    // Sync to ZeroDB backend
+    apiService.logConnection(profile.uuid, peerId, type, currentSession?.id).catch(err => {
+      console.warn('Failed to sync connection to backend:', err);
+    });
   };
 
   return (
